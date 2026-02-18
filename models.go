@@ -1,5 +1,10 @@
 package spaceship
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type DomainInfo struct {
 	Name               string            `json:"name"`
 	UnicodeName        string            `json:"unicodeName"`
@@ -167,9 +172,163 @@ func (r CNAMERecord) GetType() string {
 	return "CNAME"
 }
 
+func (r TXTRecord) GetType() string {
+	return "TXT"
+}
+
+func (r TLSARecord) GetType() string {
+	return "TLSA"
+}
+
+func (r SVCBRecord) GetType() string {
+	return "SVCB"
+}
+
+func (r SRVRecord) GetType() string {
+	return "SRV"
+}
+
+func (r PTRRecord) GetType() string {
+	return "PTR"
+}
+
+func (r NSRecord) GetType() string {
+	return "NS"
+}
+
+func (r HTTPSRecord) GetType() string {
+	return "HTTPS"
+}
+
+func (r CAARecord) GetType() string {
+	return "CAA"
+}
+
+func (r ARecord) GetType() string {
+	return "A"
+}
+
+func (r AliasRecord) GetType() string {
+	return "ALIAS"
+}
+
+func (r AAAARecord) GetType() string {
+	return "AAAA"
+}
+
 type ListDNSRecordsResponse struct {
-	Items []DNSRecord `json:"items"`
+	Items []DNSRecord `json:"-"`
 	Total int         `json:"total"`
+}
+
+func (r *ListDNSRecordsResponse) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Items []json.RawMessage `json:"items"`
+		Total int               `json:"total"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	r.Total = raw.Total
+	r.Items = make([]DNSRecord, 0, len(raw.Items))
+
+	for _, item := range raw.Items {
+		var peek struct {
+			Group DNSRecordGroup `json:"group"`
+		}
+		if err := json.Unmarshal(item, &peek); err != nil {
+			return err
+		}
+
+		var rec DNSRecord
+		switch peek.Group.Type {
+		case "A":
+			var v ARecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "AAAA":
+			var v AAAARecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "ALIAS":
+			var v AliasRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "CAA":
+			var v CAARecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "CNAME":
+			var v CNAMERecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "HTTPS":
+			var v HTTPSRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "MX":
+			var v MXRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "NS":
+			var v NSRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "PTR":
+			var v PTRRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "SRV":
+			var v SRVRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "SVCB":
+			var v SVCBRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "TLSA":
+			var v TLSARecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		case "TXT":
+			var v TXTRecord
+			if err := json.Unmarshal(item, &v); err != nil {
+				return err
+			}
+			rec = v
+		default:
+			return fmt.Errorf("unknown DNS record type: %s", peek.Group.Type)
+		}
+
+		r.Items = append(r.Items, rec)
+	}
+
+	return nil
 }
 
 type SaveDNSRecordsRequest struct {

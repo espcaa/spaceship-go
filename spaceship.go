@@ -70,3 +70,27 @@ func (c *Client) do(req *http.Request, out any) error {
 
 	return nil
 }
+
+func (c *Client) VerifyCredentials() error {
+	req, err := c.newRequest("GET", "/domains", nil)
+	if err != nil {
+		return err
+	}
+
+	q := req.URL.Query()
+	q.Add("take", "1")
+	q.Add("skip", "0")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("invalid credentials: %s", resp.Status)
+	}
+
+	return nil
+}

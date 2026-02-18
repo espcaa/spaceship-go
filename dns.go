@@ -20,7 +20,6 @@ func (c *Client) GetDomainDNSRecords(domainName string, take, skip int, orderBy 
 	}
 
 	return &result.Items, nil
-
 }
 
 func (c *Client) SaveDNSRecords(domain string, force bool, records []DNSRecord) error {
