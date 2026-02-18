@@ -2,7 +2,7 @@ package spaceship
 
 import "fmt"
 
-func (c *Client) GetDomainDNSRecords(domainName string, take, skip int, orderBy string) (*[]DNSRecord, error) {
+func (c *Client) GetDomainDNSRecords(domainName string, take, skip int, orderBy string) (ListDNSRecordsResponse, error) {
 	path := fmt.Sprintf("/dns/records/%s?take=%d&skip=%d", domainName, take, skip)
 
 	if orderBy != "" {
@@ -11,15 +11,15 @@ func (c *Client) GetDomainDNSRecords(domainName string, take, skip int, orderBy 
 
 	req, err := c.newRequest("GET", path, nil)
 	if err != nil {
-		return nil, err
+		return ListDNSRecordsResponse{}, err
 	}
 
 	var result ListDNSRecordsResponse
 	if err := c.do(req, &result); err != nil {
-		return nil, err
+		return ListDNSRecordsResponse{}, err
 	}
 
-	return &result.Items, nil
+	return result, nil
 }
 
 func (c *Client) SaveDNSRecords(domain string, force bool, records []DNSRecord) error {

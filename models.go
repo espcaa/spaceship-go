@@ -2,7 +2,6 @@ package spaceship
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type DomainInfo struct {
@@ -235,14 +234,14 @@ func (r *ListDNSRecordsResponse) UnmarshalJSON(data []byte) error {
 
 	for _, item := range raw.Items {
 		var peek struct {
-			Group DNSRecordGroup `json:"group"`
+			Type string `json:"type"`
 		}
 		if err := json.Unmarshal(item, &peek); err != nil {
 			return err
 		}
 
 		var rec DNSRecord
-		switch peek.Group.Type {
+		switch peek.Type {
 		case "A":
 			var v ARecord
 			if err := json.Unmarshal(item, &v); err != nil {
@@ -322,7 +321,10 @@ func (r *ListDNSRecordsResponse) UnmarshalJSON(data []byte) error {
 			}
 			rec = v
 		default:
-			return fmt.Errorf("unknown DNS record type: %s", peek.Group.Type)
+			var v TXTRecord
+			v.Name = "ErrorTXT"
+			v.Value = "IDK GNG"
+			rec = v
 		}
 
 		r.Items = append(r.Items, rec)
