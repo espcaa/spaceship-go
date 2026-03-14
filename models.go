@@ -45,6 +45,7 @@ type Nameservers struct {
 
 type DNSRecord interface {
 	GetType() string
+	GetGroup() DNSRecordGroup
 }
 
 type MXRecord struct {
@@ -214,6 +215,20 @@ func (r AliasRecord) GetType() string {
 func (r AAAARecord) GetType() string {
 	return "AAAA"
 }
+
+func (r ARecord) GetGroup() DNSRecordGroup     { return r.Group }
+func (r AAAARecord) GetGroup() DNSRecordGroup  { return r.Group }
+func (r CNAMERecord) GetGroup() DNSRecordGroup { return r.Group }
+func (r TXTRecord) GetGroup() DNSRecordGroup   { return r.Group }
+func (r MXRecord) GetGroup() DNSRecordGroup    { return r.Group }
+func (r NSRecord) GetGroup() DNSRecordGroup    { return r.Group }
+func (r SRVRecord) GetGroup() DNSRecordGroup   { return r.Group }
+func (r CAARecord) GetGroup() DNSRecordGroup   { return r.Group }
+func (r AliasRecord) GetGroup() DNSRecordGroup { return r.Group }
+func (r PTRRecord) GetGroup() DNSRecordGroup   { return r.Group }
+func (r TLSARecord) GetGroup() DNSRecordGroup  { return r.Group }
+func (r HTTPSRecord) GetGroup() DNSRecordGroup { return r.Group }
+func (r SVCBRecord) GetGroup() DNSRecordGroup  { return r.Group }
 
 type ListDNSRecordsResponse struct {
 	Items []DNSRecord `json:"-"`

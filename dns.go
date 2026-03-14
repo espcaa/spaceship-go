@@ -1,6 +1,9 @@
 package spaceship
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 func (c *Client) GetDomainDNSRecords(domainName string, take, skip int, orderBy string) (ListDNSRecordsResponse, error) {
 	path := fmt.Sprintf("/dns/records/%s?take=%d&skip=%d", domainName, take, skip)
@@ -25,9 +28,24 @@ func (c *Client) GetDomainDNSRecords(domainName string, take, skip int, orderBy 
 func (c *Client) SaveDNSRecords(domain string, force bool, records []DNSRecord) error {
 	path := fmt.Sprintf("/dns/records/%s", domain)
 
-	body := SaveDNSRecordsRequest{
+	wrapped := make([]json.RawMessage, len(records))
+	for i, r := range records {
+		b, err := json.Marshal(r)
+		if err != nil {
+			return err
+		}
+		var m map[string]any
+		json.Unmarshal(b, &m)
+		m["type"] = r.GetType()
+		wrapped[i], _ = json.Marshal(m)
+	}
+
+	body := struct {
+		Force bool               `json:"force,omitempty"`
+		Items []json.RawMessage  `json:"items"`
+	}{
 		Force: force,
-		Items: records,
+		Items: wrapped,
 	}
 
 	req, err := c.newRequest("PUT", path, body)
@@ -45,11 +63,19 @@ func (c *Client) SaveDNSRecords(domain string, force bool, records []DNSRecord) 
 func (c *Client) DeleteDNSRecords(domain string, records []DNSRecord) error {
 	path := fmt.Sprintf("/dns/records/%s", domain)
 
-	body := SaveDNSRecordsRequest{
-		Items: records,
+	wrapped := make([]json.RawMessage, len(records))
+	for i, r := range records {
+		b, err := json.Marshal(r)
+		if err != nil {
+			return err
+		}
+		var m map[string]any
+		json.Unmarshal(b, &m)
+		m["type"] = r.GetType()
+		wrapped[i], _ = json.Marshal(m)
 	}
 
-	req, err := c.newRequest("DELETE", path, body)
+	req, err := c.newRequest("DELETE", path, wrapped)
 	if err != nil {
 		return err
 	}
